@@ -1,0 +1,425 @@
+this is answers to s1 of ISLR book exercises
+
+
+```{r}
+head(Auto)
+```
+```{r}
+Alm <- lm(mpg ~ horsepower, data = Auto)
+summary(Alm)
+```
+shows beta0 of 40 and beta 1 of .16 which shows moderate relationship between two variables but a very small p-value so we are sure that the relationship do exist and we did not get this estimates on random chance.
+the relationship is negative so when horsepower increases we expect the mpg to decrease.
+
+```{r}
+predict(Alm, newdata = data.frame(horsepower = 98))
+```
+using this estimates of beta0 and beta1 the mpg predicted for horsepower of 98 is 24.46708.
+
+```{r}
+predict(Alm, newdata = data.frame(horsepower = 98), interval = "prediction", level= 0.95)
+```
+so the prediction interval is (14.8094, 34.12476)
+```{r}
+predict(Alm, newdata = data.frame(horsepower = 98), interval = "confidence", level= 0.95)
+```
+as expected the CI is much smaller than PI because it is talking about interval of mean of predictions.
+----------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------
+
+```{r}
+pairs(Auto)
+```
+```{r}
+cormatrix = cor(Auto[,-which(names(Auto)=="name")])
+cormatrix
+```
+
+seems like there is correlations between most of predictors and mpg except name.
+also there are big correlations between the predictors too which does not matter if we are using multiple linear regression.
+```{r}
+alm = lm(mpg ~ .-name, data= Auto)
+summary(alm)
+```
+as the correlations suggested there is relationship between mpg and most of the predictors.
+but acceleration,cylinders and horsepower have a pretty big p-values so we cannot be sure about a meaningful relationship between them and mpg.
+```{r}
+plot(alm)
+```
+in the residual vs fitted plot we can see that residuals aren't constant and the residuals have a funnel shape.
+we also see an very high leverage point and some high leverage points in residuals vs leverage plot
+```{r}
+imlm = lm(mpg ~ . -name + year:origin + origin:weight + origin:displacement + year:weight + year:displacement + weight:displacement,data=Auto )
+summary(imlm)
+```
+```{r}
+plot(imlm)
+```
+seems like there is relationship between mpg and displacement:weight interaction.
+but not other significant p-value in interactoin terms.
+```{r}
+tlm <- lm(mpg ~ . - name + poly(year,3) + poly(weight,3) ,data=Auto)
+summary(tlm)
+```
+```{r}
+tlm <- lm(mpg ~ . - name + log(year) + log(weight) + log(horsepower) ,data=Auto)
+summary(tlm)
+```
+found lots of relationships between transformations of predictors too.
+we can combine the all important predictors and transformations to build a more accurate model in the end.
+
+```{r}
+Carseats
+```
+```{r}
+pairs(Carseats )
+```
+
+```{r}
+Carseatsmlm <- lm(Sales ~ Price + Urban + US, data=Carseats)
+summary(Carseatsmlm)
+```
+okay seems like we can be sure about relationship between Price and USYes predictors but UrbanYes has a very high p-value we can almost be sure there's no relationship.
+relationship with price is negative so we can conclude that if we increase carseat prices the sales would decrease.
+coefficient for UrbanYes was estimated slightly negative but since the p-value is very high we cannot inference anything from this coefficient.
+and USYes also has a high positive coefficient which indicates that if the store is in the US the sales would increase.
+
+the equation form is like
+Sales = (-0.054459)xPrice + (-0.021916) + 1.200573
+if the Urban and US are yes
+and like
+Sales = (-0.054459)xPrice
+if both are no.
+
+```{r}
+Carseatsmlm2 <- lm(Sales ~ Price + US, data=Carseats)
+summary(Carseatsmlm2)
+```
+```{r}
+confint(Carseatsmlm2,level=0.95)
+predicint(Carseatsmlm2,)
+```
+```{r}
+plot(Carseatsmlm2)
+```
+there is some high leverage points but I don't see any outliers.
+--------------------------------------------------------------------
+--------------------------------------------------------------------
+11.
+we generate a predictor x and a response y as follows
+```{r}
+set.seed(11)
+x <- rnorm(100)
+y <- 2 * x +rnorm(100)
+y
+```
+we perform a simple linear regression without an intercept with
+```{r}
+ylm <- lm(y~x+0)
+summary(ylm)
+```
+the coefficient was estimated 2 with a very small p-value that shows that x and y have a positive relationship.
+t-value of 18.63 is very high and easily rejects null hypothesis of betha0 = 0
+```{r}
+confint(ylm)
+```
+the 95% confident interval of intercept is also arount 1.8 and 2.2 
+
+now we perform a simple linear regression
+```{r}
+yslm <- lm(y ~ x)
+summary(yslm)
+```
+the p-value of intercept is high so we cannot reject the null-hypothesis of beta0 = 0
+the standard error also didn't change between simple linear regression and linear regression without intercept so we can say that intercept didn't have any impact on improving our model.
+
+q11)d)
+```{r}
+summary(ylm)
+```
+we compute the t-statistics with formula given for the regression without intercept
+```{r}
+n <- length(x)
+sum_xy <- sum(x*y)
+sumx2 <- sum(x^2)
+sumy2 <- sum(y^2)
+
+t_formula <- (sqrt(n-1)*sum_xy) / sqrt(sumx2 * sumy2 - sum_xy^2)
+```
+now we compute t-statistic using regression without intercept
+```{r}
+t_regresstion <- summary(ylm)$coefficients[1,"t value"]
+```
+and compare them:
+```{r}
+t_formula
+t_regresstion
+identical(round(t_formula, 10), round(t_regresstion, 10))
+```
+we see that the both numbers are the same so the t-statistic implemented in R and the given formula are the same.
+
+q11)e)
+
+by changing the places of y and x in the formula given, the result would not change so t-statistic for regression without intercept of y into x or x into y would be the same.
+
+q11)f)
+we perform the regression for y into x
+```{r}
+xlm <- lm(x~y+0)
+```
+```{r}
+summary(xlm)$coefficients[1,"t value"]
+```
+the t-value is still the same.
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+q12)a)
+in regression without intercept, if sum of all x^2 is equal to sum of all y^2 the coefficient of both regression from y into x and x into y will be the same.
+
+b)
+```{r}
+x1 <- rnorm(100)
+y1 <- x1^2 - 20 +rnorm(100)
+yinx1 <- lm(y1 ~ x1+0)
+summary(yinx1)$coefficients[1]
+xiny1 <- lm(x1 ~ y1+0)
+summary(xiny1)$coefficients[1]
+```
+```{r}
+x2 <- rnorm(100)
+y2 <- x2 * rnorm(100)
+yinx2 <- lm(y2 ~ x2+0)
+summary(yinx2)$coefficients[1]
+xiny2 <- lm(x2 ~ y2+0)
+summary(xiny2)$coefficients[1]
+```
+they're haven't become exactly the same but they are very close because they have close distribution and std.
+
+q13)a)
+```{r}
+set.seed(1)
+x <- rnorm(100)
+eps <- rnorm(100,0,0.25)
+y <- -1+ 0.5*x +eps
+length(y)
+yixlm <- lm(y ~x)
+summary(yixlm)
+```
+the estimated betas are very close to the given intercept and coef while creating the y.
+
+scatter plot displaying relationship of y and x:
+```{r}
+plot(x,y)
+abline(yixlm,col="blue")
+legend("bottomright",legend = c("actual","estimate"),fill = c("gray","blue"))
+```
+```{r}
+yixplm <- lm(y ~ poly(x,degree=2))
+summary(yixplm)
+```
+well the RSE and R-squared slightly improved but p_value for third coefficient is very high and indicate no relationship with y. and perhabs if we test on test data it would even give worse resaults.
+
+
+now we decrease the error
+```{r}
+x <- rnorm(100)
+eps <- rnorm(100,0,0.1)
+y <- -1+ 0.5*x +eps
+length(y)
+yixlm2 <- lm(y ~x)
+summary(yixlm2)
+```
+
+```{r}
+plot(x,y)
+abline(yixlm2,col="blue")
+legend("bottomright",legend = c("actual","estimate"),fill = c("gray","blue"))
+```
+the regression line fits the data much better than the original data and thus we see less error.
+
+
+we generate more noisier model:
+
+q13)a)
+```{r}
+x <- rnorm(100)
+eps <- rnorm(100,0,0.35)
+y <- -1+ 0.5*x +eps
+length(y)
+yixlm3 <- lm(y ~x)
+summary(yixlm3)
+```
+the estimated betas are very close to the given intercept and coef while creating the y.
+
+scatter plot displaying relationship of y and x:
+```{r}
+plot(x,y)
+abline(yixlm3,col="blue")
+legend("bottomright",legend = c("actual","estimate"),fill = c("gray","blue"))
+```
+```{r}
+predict(yixlm,newdata = data.frame(x = 5),interval = "prediction")
+predict(yixlm2,newdata = data.frame(x = 5),interval = "prediction")
+predict(yixlm3,newdata = data.frame(x = 5),interval = "prediction")
+predict(yixlm,newdata = data.frame(x = 5),interval = "confidence")
+predict(yixlm2,newdata = data.frame(x = 5),interval = "confidence")
+predict(yixlm3,newdata = data.frame(x = 5),interval = "confidence")
+
+
+```
+the interval moves for less and more variable data but the interval is about the same size.
+
+q14)
+```{r}
+set.seed(1)
+x1 <- runif(100)
+x2 <- 0.5 * x1 + rnorm(100)/10
+y <- 2 + 2 * x1 + 0.3 * x2 + rnorm(100)
+```
+we made data with beta0 equal to 2, beta1 equal to 2,beta2 equal to 0.3 and a standard normal distributed error.
+there is close to one correlation between x1 and x2.
+```{r}
+plot(x1,x2)
+cor(x1,x2)
+```
+```{r}
+pred <- lm(y ~ x1 + x2)
+summary(pred)
+```
+model is not sure about x2 having a relationship with y
+and the estimates for beta1 and beta2 are very far from reallity.
+seems like although we chose the right model to describe the linear relationship we have, but having correlated predictors ruined the model.
+```{r}
+lmx1 <- lm(y~x1)
+summary(lmx1)
+```
+the coefficient for this one seems right.
+
+```{r}
+lmx2 <-lm(y ~ x2)
+summary(lmx2)
+```
+Now suppose we obtain one additional observation, which was
+unfortunately mismeasured.
+```{r}
+x1 <- c(x1, 0.1)
+x2 <- c(x2, 0.8)
+y <- c(y, 6)
+```
+```{r}
+plot(x1,x2)
+cor(x1,x2)
+plot(y)
+```
+```{r}
+pred <- lm(y ~ x1 + x2)
+summary(pred)
+```
+```{r}
+lmx1 <- lm(y~x1)
+summary(lmx1)
+```
+
+
+```{r}
+lmx2 <-lm(y ~ x2)
+summary(lmx2)
+```
+the added point is a high leverage point in x2
+also have a higher value than most of the point in y so can be considered on of outliers
+though it is an outlier in x2 but it has affected the lmx1 model more, because x1 and x2 are correlated.
+
+q15)a)
+```{r}
+library(ISLR2)
+attach(Boston)
+crim.zn <- lm(crim ~ zn)
+crim.indus <- lm(crim ~ indus)
+crim.chas <- lm(crim ~ chas)
+crim.nox <- lm(crim ~ nox)
+crim.rm <- lm(crim ~ rm)
+crim.age <- lm(crim ~ age)
+crim.dis <- lm(crim ~ dis)
+crim.rad <- lm(crim ~ rad)
+crim.tax <- lm(crim ~ tax)
+crim.ptratio <- lm(crim ~ ptratio)
+crim.lstat <- lm(crim ~ lstat)
+crim.medv <- lm(crim ~ medv)
+summary(crim.zn)
+```
+```{r}
+summary(crim.indus)
+```
+```{r}
+summary(crim.chas)
+```
+```{r}
+summary(crim.zn)
+```
+```{r}
+summary(crim.nox)
+```
+```{r}
+summary(crim.nox)
+```
+```{r}
+summary(crim.rm)
+```
+```{r}
+summary(crim.age)
+```
+```{r}
+summary(crim.dis)
+```
+```{r}
+summary(crim.rad)
+```
+```{r}
+summary(crim.tax)
+```
+```{r}
+summary(crim.ptratio)
+```
+```{r}
+summary(crim.lstat)
+```
+```{r}
+summary(crim.medv)
+```
+seems like simple linear regression found all of predictors having statistically significant correlation with per capita crime rate of town.
+```{r}
+crim.mlm <- lm(crim ~ .,data = Boston)
+summary(crim.mlm)
+```
+in multiple linear regression setting, only dis,rad and medv have a very low p-value but and we can definitely regect null hypothesis 
+there are other love p-values too and assuming under 0.05 rejection threshold we can reject null hypothesis for zn too.
+
+```{r}
+smlcfs <- c(crim.zn$coefficients[2], crim.indus$coefficients[2], crim.chas$coefficients[2], crim.nox$coefficients[2], crim.rm$coefficients[2], crim.age$coefficients[2], crim.dis$coefficients[2], crim.rad$coefficients[2], crim.tax$coefficients[2], crim.ptratio$coefficients[2], crim.lstat$coefficients[2], crim.medv$coefficients[2])
+plot(crim.mlm$coefficients[-1],smlcfs)
+```
+two model coefficients seem very different from each other.
+probably because multiple linear regression cancels out correlations between predictors.
+now we fit linear model with non-linear predictors
+```{r}
+crim.nldis <- lm(crim ~ poly(dis,3))
+crim.nlrad <- lm(crim ~ poly(dis,3))
+crim.nlzn <- lm(crim ~ poly(zn,3))
+crim.nlmedv <- lm(crim ~ poly(medv,3))
+summary(crim.nldis)
+```
+```{r}
+summary(crim.nlrad)
+```
+```{r}
+summary(crim.nlzn)
+```
+```{r}
+summary(crim.nlmedv)
+```
+all of the predictors we used seem to have non-linear relations too.
+```{r}
+
+```
+
+
