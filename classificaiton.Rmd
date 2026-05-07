@@ -1,0 +1,302 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+```{r}
+library(ISLR2)
+names(Smarket)
+```
+```{r}
+dim(Smarket)
+```
+```{r}
+summary(Smarket)
+```
+```{r}
+pairs(Smarket)
+```
+```{r}
+cor(Smarket[, -9])
+```
+
+```{r}
+attach(Smarket)
+```
+```{r}
+plot(Volume)
+```
+
+```{r}
+glm.fits <- glm(
+  Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Volume,
+  data=Smarket, family = binomial
+)
+summary(glm.fits)
+```
+```{r}
+coef(glm.fits)
+```
+```{r}
+summary(glm.fits)$coef
+```
+
+```{r}
+summary(glm.fits)$coef[, 4]
+```
+```{r}
+glm.probs <- predict(glm.fits, type = "response")
+```
+```{r}
+glm.probs[1:10]
+```
+```{r}
+contrasts(Direction)
+```
+
+```{r}
+glm.pred <- rep("Down", 1250)
+```
+```{r}
+glm.pred[glm.probs > .5] = "Up"
+```
+
+```{r}
+table(glm.pred, Direction)
+```
+```{r}
+(507 + 145) / 1250
+```
+
+```{r}
+mean(glm.pred == Direction)
+```
+
+```{r}
+train <- (Year < 2005)
+```
+
+```{r}
+Smarket.2005 <- Smarket[!train, ]
+```
+
+```{r}
+dim(Smarket.2005)
+```
+```{r}
+Direction.2005 <- Direction[!train]
+```
+```{r}
+glm.fits <- glm(
+  Direction ~ Lag1 + Lag2 +Lag3 +Lag4 +Lag5 + + Volume, 
+  data = Smarket , family = binomial , subset = train
+)
+```
+```{r}
+glm.probs <- predict(glm.fits, Smarket.2005, type = "response")
+```
+```{r}
+glm.pred<- rep("Down", 252)
+glm.pred[glm.probs > .5] <- "up"
+table(glm.pred, Direction.2005)
+```
+```{r}
+mean(glm.pred == Direction.2005)
+```
+```{r}
+mean(glm.pred != Direction.2005)
+```
+```{r}
+glm.fits <- glm(Direction ~ Lag1+ Lag2, data= Smarket,
+                family = binomial , subset = train)
+```
+
+```{r}
+glm.probs <- predict(glm.fits, Smarket.2005, type = "response")
+```
+```{r}
+glm.pred <-rep("Down", 252)
+glm.pred[glm.probs > .5] <- "Up"
+table(glm.pred, Direction.2005)
+```
+```{r}
+mean(glm.pred == Direction.2005)
+```
+```{r}
+106 / (106 + 76)
+```
+```{r}
+predict(glm.fits, 
+        newdata = data.frame(Lag1 = c(1.2,1.5), lag2 = c(1.1, -0.8)),
+        type = "response")
+```
+
+```{r}
+library(MASS)
+lda.fit <- lda(Direction ~ Lag1 + Lag2, data = Smarket,
+               subset = train)
+lda.fit
+```
+```{r}
+lda.pred <- predict(lda.fit,Smarket.2005)
+names(lda.pred)
+```
+```{r}
+lda.class <- lda.pred$class
+table(lda.class, Direction.2005)
+```
+
+```{r}
+mean(lda.class == Direction.2005)
+```
+```{r}
+sum(lda.pred$posterior[,1]>=.5)
+```
+```{r}
+sum(lda.pred$posterior[,1] < .5)
+```
+
+```{r}
+lda.pred$posterior[1:20,1]
+lda.class[1:20]
+```
+
+Quadratic Discriminant Analysis
+
+```{r}
+qda.fit <- qda(Direction ~ Lag1 + Lag2, data = Smarket, subset = train)
+qda.fit
+```
+
+```{r}
+qda.class <- predict(qda.fit, Smarket.2005)$class
+table(qda.class, Direction.2005)
+```
+```{r}
+mean(qda.class == Direction.2005)
+```
+
+Naive bayes this time
+
+```{r}
+library(e1071)
+nb.fit <- naiveBayes(Direction ~ Lag1 + Lag2, data = Smarket, subset = train)
+nb.fit
+```
+
+```{r}
+library(class)
+train.X <- cbind(Lag1, Lag2)[train,]
+test.X <- cbind(Lag1, Lag2)[!train,]
+train.Direction<- Direction[train] 
+```
+
+```{r}
+set.seed(1)
+knn.pred <- knn(train.X,test.X, train.Direction, k = 1)
+table(knn.pred, Direction.2005)
+```
+
+```{r}
+set.seed(1)
+knn.pred <- knn(train.X,test.X, train.Direction, k = 3)
+table(knn.pred, Direction.2005)
+mean(knn.pred == Direction.2005)
+```
+
+```{r}
+dim(Caravan)
+attach(Caravan)
+summary(Purchase)
+```
+```{r}
+standardized.X <- scale(Caravan[, -86])
+var(Caravan[, 1])
+var(Caravan[, 2])
+var(standardized.X[, 2])
+var(standardized.X[, 2])
+```
+
+```{r}
+test <- 1:1000
+train.X <- standardized.X[-test, ]
+test.X <- standardized.X[test, ]
+train.Y <- Purchase[-test]
+```
+```{r}
+test.Y <- Purchase[test]
+set.seed(1)
+knn.pred <- knn(train.X, test.X, train.Y, k = 1)
+mean(test.Y != knn.pred)
+mean(test.Y != "No")
+```
+
+```{r}
+table(knn.pred, test.Y)
+9/(68+9)
+```
+though knn with k = 1 is not a very good model most of the time, it turns out it is far better than random guessing in this case(9/77 times it predicter yes the people actually purchased it.)
+
+```{r}
+knn.pred <- knn(train.X, test.X, train.Y, k = 3)
+table(knn.pred, test.Y)
+```
+and 19% success rate with k = 3 
+```{r}
+5/26
+knn.pred <-  knn(train.X, test.X, train.Y, k = 5)
+table(knn.pred, test.Y)
+```
+```{r}
+4/15
+```
+
+```{r}
+glm.fits <- glm(Purchase ~ ., data = Caravan, family = binomial, subset = -test)
+glm.probs <- predict(glm.fits, Caravan[test,], type="response")
+glm.pred <- rep("No", 1000)
+glm.pred[glm.probs> 0.5] <- "Yes"
+table(glm.pred, test.Y)
+```
+
+```{r}
+ glm.pred <- rep("No", 1000)
+glm.pred[glm.probs > .25] <- "Yes"
+table(glm.pred, test.Y)
+```
+```{r}
+11/(22+11)
+```
+it's right about them when it says yes 33% of the times.
+a pretty good model.
+
+
+
+
+#-poisson regression for bikeshare data
+```{r}
+attach(Bikeshare)
+dim(Bikeshare)
+names(Bikeshare)
+```
+```{r}
+mod.lm <- lm(
+  bikers ~ mnth + hr + workingday + temp + weathersit,
+  data = Bikeshare
+)
+summary(mod.lm)
+```
+
+```{r}
+
+```
+
+
+
+
+
+
+

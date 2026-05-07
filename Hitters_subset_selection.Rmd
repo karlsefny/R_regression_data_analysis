@@ -1,0 +1,58 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(ISLR2)
+View(Hitters)
+```
+```{r}
+names(Hitters)
+```
+```{r}
+dim(Hitters)
+```
+```{r}
+sum(is.na(Hitters$Salary))
+```
+```{r}
+Hitters <- na.omit(Hitters)
+dim(Hitters)
+```
+```{r}
+sum(is.na(Hitters))
+```
+```{r}
+library(leaps)
+regfit.full <- regsubsets(Salary ~., data= Hitters)
+summary(regfit.full)
+```
+```{r}
+regfit.full <- regsubsets(Salary ~ ., data = Hitters,nvmax = 19)
+reg.summary <- summary(regfit.full)
+```
+```{r}
+names(reg.summary)
+```
+```{r}
+reg.summary$rsq
+```
+```{r}
+#par(mfrow = c(2, 2))
+plot(reg.summary$rss, xlab = "Number of Variables", ylab = "rss", type = "l")
+plot(reg.summary$adjr2, xlab = "Number of Variables", ylab = "Adjusted RSq", type = "l")
+points(11,reg.summary$adjr2[11],col = "red", cex = 2 , pch = 20)
+```
+```{r}
+which.max(reg.summary$adjr2)
+```
+```{r}
+plot(reg.summary$cp, xlab = "Number of Variables", ylab = "Cp", type = "l")
+points(which.min(reg.summary$cp), reg.summary$cp[10], col = "red", cex = 2 , pch = 20)
+plot(reg.summary$bic, xlab = "Number of Variables", ylab = "BIC", type = "l")
+points(which.min(reg.summary$bic),reg.summary$bic[6], col = "red", cex = 2, pch = 20)
+```
+```{r}
+```
+

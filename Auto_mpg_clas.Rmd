@@ -1,0 +1,142 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+we want ot develop a model to predict whether a given car gets high or low gas mileage based on Auto data set.
+
+```{r}
+summary(Auto)
+```
+```{r}
+pairs(Auto)
+```
+almost every predictor seem to have correlation with mpg but they also have correlation with each other.
+we format the mpg into a binary nominal variable by giving it a value of 1 whenever it has a value above median and 0 whenever it has a value below median
+```{r}
+Auto$mpg01 <- ifelse(Auto$mpg>median(Auto$mpg),1,0)
+Auto$mpg
+Auto$mpg01
+median(Auto$mpg)
+```
+now we can fit a classification model on our data.
+```{r}
+boxplot(Auto,horizontal = TRUE)
+```
+
+```{r}
+for (i in 1:ncol(Auto)){
+    boxplot(Auto[,i],xlab = names(Auto)[i],ylab="value")
+}
+```
+we split data into training and test sets.
+```{r}
+set.seed(1)
+s <- sample.int(397,317,replace = FALSE)
+Auto.train <- Auto[s,]
+Auto.test <-Auto[-s,]
+dim(Auto.test)
+```
+
+```{r}
+library(MASS)
+alda <- lda(mpg01~ acceleration + weight + horsepower + displacement, data= Auto.train)
+alda
+```
+```{r}
+alda.pred <- predict(alda,newdata = Auto.test)
+alda.pred
+```
+
+```{r}
+mean(alda.pred$class == Auto.test$mpg01)
+```
+```{r}
+table(alda.pred$class,Auto.test$mpg01)
+```
+seems like only 9 out of 80 test data were predicted uncorrectly and we got a pretty low test error using lda model.
+
+```{r}
+aqda <- qda(mpg01 ~ acceleration + weight + horsepower + displacement, data= Auto.train)
+aqda
+```
+```{r}
+aqda.pred <- predict(aqda,newdata = Auto.test)
+aqda.pred
+```
+
+```{r}
+mean(aqda.pred$class == Auto.test$mpg01)
+```
+```{r}
+table(predicted= aqda.pred$class,actual = Auto.test$mpg01)
+```
+qda test results seem similar to lda model except that error model a little toward 0 predicted values.
+
+```{r}
+autolr <- glm(mpg01 ~  I(weight^2) + I(horsepower^3) +displacement, data= Auto.train,family=binomial)
+summary(autolr)
+```
+```{r}
+autolr.prob <- predict(autolr,newdata = Auto.test,type = "response")
+autolr.prob
+```
+
+```{r}
+autolr.pred <- ifelse(autolr.prob>0.5,1,0)
+mean(autolr.pred == Auto.test$mpg01)
+```
+```{r}
+table(predicted= autolr.pred,actual = Auto.test$mpg01)
+```
+performed a little worse than lda or qda.
+
+```{r}
+library(class)
+attach(Auto)
+set.seed(1)
+```
+```{r}
+Auto.clean <- na.omit(Auto)
+dim(Auto.clean)
+dim(Auto)
+```
+```{r}
+392*(8/10)
+```
+```{r}
+s<- sample(392,313)
+```
+```{r}
+train.knn <- cbind(Auto.clean$weight,Auto.clean$horsepower)[s,]
+test.knn <- cbind(Auto.clean$weight,Auto.clean$horsepower)[-s,]
+train.y <- Auto.clean$mpg01[s]
+autoknn <- knn(train.knn,test.knn,train.y,k=1,)
+table(predicted = autoknn,actual = Auto.clean$mpg01[-s])
+```
+even with k=1 results seem ok
+let's try bigger k values
+
+```{r}
+train.knn <- cbind(Auto.clean$weight,Auto.clean$horsepower)[s,]
+test.knn <- cbind(Auto.clean$weight,Auto.clean$horsepower)[-s,]
+train.y <- Auto.clean$mpg01[s]
+autoknn <- knn(train.knn,test.knn,train.y,k=2)
+table(predicted = autoknn,actual = Auto.clean$mpg01[-s])
+```
+
+```{r}
+train.knn <- cbind(Auto.clean$weight,Auto.clean$horsepower)[s,]
+test.knn <- cbind(Auto.clean$weight,Auto.clean$horsepower)[-s,]
+train.y <- Auto.clean$mpg01[s]
+autoknn <- knn(train.knn,test.knn,train.y,k=3)
+table(predicted = autoknn,actual = Auto.clean$mpg01[-s])
+```
+```{r}
+train.knn <- cbind(Auto.clean$weight,Auto.clean$horsepower)[s,]
+test.knn <- cbind(Auto.clean$weight,Auto.clean$horsepower)[-s,]
+train.y <- Auto.clean$mpg01[s]
+autoknn <- knn(train.knn,test.knn,train.y,k=5,)
+table(predicted = autoknn,actual = Auto.clean$mpg01[-s])
+```
+k=3 and k=5 resulted in same cm, but both are better than smaller k values.
